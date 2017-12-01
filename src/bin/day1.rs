@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-static WORDLIST: &'static str = include_str!("../../res/day1.txt");
-
-fn make_ngram(n: usize, word: &str) -> Vec<u8> {
+fn make_ngram(n: usize, word: &String) -> Vec<u8> {
     let mut ngram = String::new();
     (0..(word.len() - n + 1)).for_each(|i| ngram.push_str(&word[i..i+n]));
     let mut lowercase = ngram.to_lowercase().into_bytes();
@@ -10,21 +8,47 @@ fn make_ngram(n: usize, word: &str) -> Vec<u8> {
     lowercase
 }
 
-fn main() {
-    let ngram = String::from("aeteesasrsssstaesersrrsse").to_lowercase();
+fn solve(ngram: &str) -> (usize, String) {
+    let ngram = String::from(ngram);
     let letters: HashSet<u8> = ngram.bytes().collect();
-
     let mut sorted = ngram.clone().into_bytes();
     sorted.sort();
+
+    let wordlist = include_str!("../../res/day1.txt");
+    let lines = &mut wordlist.lines();
     
-    let (n, word) = WORDLIST.lines()
-        .map(|l| String::from(l).to_lowercase())
-        .filter(|l| l.bytes().collect::<HashSet<u8>>() == letters)
-        .filter_map(|l| {
-            if let Some(n) = (2..l.len()-1).find(|&n| make_ngram(n, &l) == sorted) {
-                return Some((n, l))
-            }
-            None
-        }).next().unwrap();
+    (2..8)
+        .filter(|n| ngram.len() % n == 0)
+        .map(|n| (n, n - 1 + ngram.len()/n))
+        .filter_map(|(n, wlen)| {
+            lines
+                .skip_while(|&line| line.len() < wlen)
+                .take_while(|&line| line.len() == wlen)
+                .map(|line| String::from(line).to_lowercase())
+                .filter(|lc| lc.bytes().collect::<HashSet<u8>>() == letters)
+                .filter_map(|lc| {
+                    if make_ngram(n, &lc) == sorted {
+                        return Some((n, lc));
+                    }
+                    None
+                }).next()
+        }).next().unwrap()
+}
+
+fn main() {
+    let (n, word) = solve("aeteesasrsssstaesersrrsse");
     println!("{}-{}", n, word);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn snowflake() {
+        assert_eq!(solve("snnoowwffllaakke"), (2, "snowflake".into()));
+    }
+        #[test]
+    fn mistletoe() {
+        assert_eq!(solve("misiststltleletetotoe"), (3, "mistletoe".into()));
+    }
 }
