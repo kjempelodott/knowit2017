@@ -22,6 +22,8 @@ fn solve(ngram: &str) -> (usize, String) {
         .map(|n| (n, n - 1 + ngram.len()/n))
         .filter_map(|(n, wlen)| {
             lines
+                .skip_while(|&line| line.len() < wlen)
+                .take_while(|&line| line.len() == wlen)
                 .map(|line| String::from(line).to_lowercase())
                 .filter(|lc| lc.bytes().all(|c| letters.contains(&c)))
                 .filter_map(|lc| {
