@@ -3,9 +3,9 @@ use std::collections::HashSet;
 fn make_ngram(n: usize, word: &String) -> Vec<u8> {
     let mut ngram = String::new();
     (0..(word.len() - n + 1)).for_each(|i| ngram.push_str(&word[i..i+n]));
-    let mut lowercase = ngram.to_lowercase().into_bytes();
-    lowercase.sort();
-    lowercase
+    let mut sorted = ngram.into_bytes();
+    sorted.sort();
+    sorted
 }
 
 fn solve(ngram: &str) -> (usize, String) {
