@@ -1,111 +1,53 @@
-use std::collections::{HashMap,HashSet,BinaryHeap};
+#[macro_use]
+extern crate lazy_static;
+use std::collections::{HashMap,BinaryHeap};
 
-static mut SIZE: u64 = 10;
-
-#[derive(PartialEq,Eq)]
-enum Reachable {
-    Wall,
-    Unknown,
-    No,
-    Yes
+lazy_static! {
+    static ref BITS: Vec<u64> = (0..33).map(|s| 1 << s).collect();
 }
 
-fn find_any_path(p: (u64, u64), points: &mut HashMap<(u64, u64), Reachable>) {
+fn is_wall(x: u64, y: u64) -> bool {
+    let z = x*x*x + 12*x*y + 5*x*y*y;
+    BITS.iter()
+        .filter(|&b| b & z != 0)
+        .count() % 2 != 0
+}
 
-    if *points.get(&p).unwrap() != Reachable::Unknown {
-        return
-    }
-
-    let mut visited: HashSet<(u64, u64)> = HashSet::new();
+fn solve(size: u64) -> usize {
+    let mut graph: HashMap<(u64, u64), bool> = HashMap::new();
+    let p = (1, 1);
     let mut queue: BinaryHeap<(u64, u64)> = BinaryHeap::new();
-    queue.push(p);
-
-    let mut reachable = false;
     
+    queue.push(p);
     while let Some(cur) = queue.pop() {
         let (x, y) = cur;
-        visited.insert(cur);
-        
+        if is_wall(x, y) {
+            graph.insert(p, false);
+            continue;
+        }
         let mut adjacent = vec![];
-        if x != 1 {
-            adjacent.push((x-1, y));
-        }
-        if y != 1 {
-            adjacent.push((x, y-1));
-        }
-        unsafe {
-            if x != SIZE {
-                adjacent.push((x+1, y));
-            }
-            if y != SIZE {
-                adjacent.push((x, y+1));
-            }
-        }
+        if x != 1 { adjacent.push((x-1, y)) }
+        if y != 1 { adjacent.push((x, y-1)) }
+        if x != size { adjacent.push((x+1, y)) }
+        if y != size { adjacent.push((x, y+1)) }
         for &newp in adjacent.iter() {
-            if visited.contains(&newp) {
-                continue
-            }
-            match *points.get(&newp).unwrap() {
-                Reachable::Wall|Reachable::No => {}
-                Reachable::Yes => {
-                    reachable = true;
+            if !graph.contains_key(&newp) {
+                let (x, y) = newp;
+                if is_wall(x, y) {
+                    graph.insert(newp, false);
+                    continue;
                 }
-                _ => {
-                    queue.push(newp);
-                }
-            };
-        }
-    }
-    if reachable {
-        for &p in visited.iter() {
-            points.insert(p, Reachable::Yes);
-        }
-    }
-    else {
-        for &p in visited.iter() {
-            points.insert(p, Reachable::No);
-        }
-    }
-}
-
-unsafe fn solve() -> usize {
-                     
-    let mut points: HashMap<(u64, u64), Reachable> = HashMap::new();
-    let bits: Vec<u64> = (0..33).map(|p| 1 << p).collect();
-
-    for y in 1..SIZE+1 {
-        for x in 1..SIZE+1 {
-            let z = x*x*x + 12*x*y + 5*x*y*y;
-            let even = bits.iter()
-                .map(|b| if b & z == 0 { 0 } else  { 1 })
-                .sum::<u64>() % 2 == 0;
-            if even {
-                points.insert((x, y), Reachable::Unknown);
-            }
-            else {
-                points.insert((x, y), Reachable::Wall);
+                graph.insert(newp, true);
+                queue.push(newp);
             }
         }
     }
-    points.insert((1, 1), Reachable::Yes);
-    
-    for y in 2..SIZE+1 {
-        for x in 1..y+1 {
-            if x == y {
-                find_any_path((x, x), &mut points);
-            }
-            else {
-                find_any_path((x, y), &mut points);
-                find_any_path((y, x), &mut points);
-            }
-        }
-    }
-    points.values().filter(|&r| *r == Reachable::No).count()
+    (1..size+1)
+        .fold(0, |s, y| s + (1..size+1)
+              .filter(|&x| !graph.contains_key(&(x, y)) && !is_wall(x, y))
+              .count())
 }
 
 fn main() {
-    unsafe {
-        SIZE = 1000;
-        println!("Unreachable points: {}", solve());
-    }
+    println!("Unreachable points: {}", solve(1000));
 }
