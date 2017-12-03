@@ -5,3 +5,5 @@ authors = ["kjempelodott <kjempelodott@gmail.com>"]
 
 [dependencies]
 lazy_static = "*"
+image = "*"
+itertools = "*"
