@@ -21,10 +21,6 @@ fn solve(size: u64) -> usize {
     queue.push(p);
     while let Some(cur) = queue.pop() {
         let (x, y) = cur;
-        if is_wall(x, y) {
-            graph.insert(p, false);
-            continue;
-        }
         let mut adjacent = vec![];
         if x != 1 { adjacent.push((x-1, y)) }
         if y != 1 { adjacent.push((x, y-1)) }
