@@ -39,9 +39,9 @@ fn solve(size: u64) -> usize {
         }
     }
     (1..size+1)
-        .fold(0, |s, y| s + (1..size+1)
-              .filter(|&x| !graph.contains_key(&(x, y)) && !is_wall(x, y))
-              .count())
+        .map(|y| (1..size+1)
+             .filter(|&x| !graph.contains_key(&(x, y)) && !is_wall(x, y))
+             .count()).sum()
 }
 
 fn main() {
