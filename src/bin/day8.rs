@@ -26,10 +26,7 @@ lazy_static! {
 
 fn is_juletall(i: u64) -> bool {
     if i < 1000 {
-        if HAPPY_BASTARDS.contains(&i) {
-            return true;
-        }
-        return false;
+        return HAPPY_BASTARDS.contains(&i);
     }
     is_juletall(i.to_string().chars()
         .map(|c| c.to_digit(10).unwrap() as u64)
